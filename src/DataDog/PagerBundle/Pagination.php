@@ -2,7 +2,9 @@
 
 namespace DataDog\PagerBundle;
 
+use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
+use Gedmo\Translatable\TranslatableListener;
 use Symfony\Component\HttpFoundation\Request;
 
 class Pagination extends \ArrayIterator
@@ -189,8 +191,14 @@ class Pagination extends \ArrayIterator
         $this->query = $params;
 
         $this->pagination = $this->buildPagination($this->page, $range);
+        $query = $paginator->getQuery()
+            ->setHint(
+                Query::HINT_CUSTOM_OUTPUT_WALKER,
+                'Gedmo\\Translatable\\Query\\TreeWalker\\TranslationWalker'
+            );
+        $query->setHint(TranslatableListener::HINT_TRANSLATABLE_LOCALE, $request->getLocale());
 
-        parent::__construct($paginator->getQuery()->getResult());
+        parent::__construct($query->getResult());
     }
 
     /**
